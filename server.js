@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const TARIFAS = require("./src/tarifas");
 const { validarSolicitud } = require("./src/validar");
@@ -9,8 +10,11 @@ const PORT = process.env.PORT || 4000;
 // Para poder leer el JSON que nos envían (lo guarda en req.body)
 app.use(express.json());
 
-// Portada: lista de rutas
-app.get("/", (req, res) => {
+// Portada: la landing (carpeta public/)
+app.use(express.static(path.join(__dirname, "public")));
+
+// Lista de rutas de la API
+app.get("/api", (req, res) => {
   res.json({
     mensaje: "API Presupuesta mi web",
     rutas: ["GET /api/estado", "GET /api/tarifas", "POST /api/presupuesto"]

@@ -35,6 +35,8 @@ El servidor se abre en el **puerto 4000**:
 http://localhost:4000
 ```
 
+Al abrir esa dirección en el navegador se ve la **landing** del proyecto (carpeta `public/`), con una calculadora que usa la API en directo. La lista de rutas en JSON está en `GET /api`.
+
 Si el puerto 4000 está ocupado, se puede usar otro (en Windows PowerShell):
 
 ```powershell
@@ -119,6 +121,10 @@ presupuesta-mi-web/
 │   ├── tarifas.js     → precios del servidor
 │   ├── validar.js     → comprueba los datos antes de calcular
 │   └── calcular.js    → función de cálculo (separada de Express)
+├── public/
+│   ├── index.html     → landing de presentación
+│   ├── estilos.css    → estilos (efecto liquid glass)
+│   └── app.js         → smooth scroll (Lenis) y conexión con la API
 ├── pruebas/
 │   └── pruebas.js     → lanza todas las pruebas automáticamente
 ├── package.json

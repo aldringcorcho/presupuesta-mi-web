@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Presupuesta mi web</title>
+  <meta name="description" content="Calcula al momento el presupuesto de tu web: landing o corporativa, páginas, formulario e idiomas.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <!-- Filtro SVG del efecto "liquid glass": deforma lo que hay detrás del cristal (solo Chromium) -->
+  <svg class="oculto" aria-hidden="true" width="0" height="0">
+    <filter id="liquido" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves="2" seed="7" result="ruido" />
+      <feGaussianBlur in="ruido" stdDeviation="2" result="ruidoSuave" />
+      <feDisplacementMap in="SourceGraphic" in2="ruidoSuave" scale="38" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <!-- Fondo: rejilla en perspectiva, manchas de neón y luz que sigue al cursor -->
+  <div class="fondo" aria-hidden="true">
+    <div class="puntos"></div>
+    <span class="mancha mancha--1" data-parallax="0.15"></span>
+    <span class="mancha mancha--2" data-parallax="-0.1"></span>
+    <span class="mancha mancha--3" data-parallax="0.22"></span>
+    <span class="mancha mancha--4" data-parallax="-0.18"></span>
+    <div class="suelo"></div>
+    <div class="luz-cursor"></div>
+    <div class="grano"></div>
+  </div>
+
+  <header class="nav cristal cristal--liquido">
+    <a href="#inicio" class="marca">
+      <span class="marca__icono">€</span>
+      <span>Presupuesta<b>·</b>mi<b>·</b>web</span>
+    </a>
+    <nav class="nav__enlaces" aria-label="Secciones">
+      <a href="#como">Cómo funciona</a>
+      <a href="#tarifas">Tarifas</a>
+      <a href="#calculadora">Calculadora</a>
+      <a href="#api">API</a>
+    </nav>
+    <a href="#calculadora" class="boton boton--pequeno">Calcular</a>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section id="inicio" class="hero">
+      <div class="hero__texto revelar">
+        <span class="etiqueta cristal"><span class="punto" id="punto-estado"></span> API REST · Node.js + Express</span>
+        <h1>Tu web, con un <span class="degradado" id="titular-efecto">precio claro</span> en segundos.</h1>
+        <p class="hero__sub">Elige el tipo de web, cuántas páginas necesitas y los extras. El servidor valida los datos y calcula el presupuesto con sus propias tarifas: nada de precios inventados desde el navegador.</p>
+        <div class="hero__acciones">
+          <a href="#calculadora" class="boton cristal cristal--liquido borde-vivo">Calcular mi presupuesto →</a>
+          <a href="#api" class="boton boton--fantasma">Ver la API</a>
+        </div>
+        <dl class="hero__datos">
+          <div><dt>3</dt><dd>rutas REST</dd></div>
+          <div><dt>11/11</dt><dd>pruebas OK</dd></div>
+          <div><dt>0</dt><dd>precios en el navegador</dd></div>
+        </dl>
+      </div>
+
+      <div class="hero__tarjeta cristal ventana revelar" style="--retraso: .15s">
+        <div class="ventana__barra"><i></i><i></i><i></i><span>POST /api/presupuesto</span></div>
+        <pre class="codigo"><code><span class="c-gris">// petición</span>
+{ <span class="c-clave">"tipo"</span>: <span class="c-texto">"corporativa"</span>, <span class="c-clave">"paginas"</span>: <span class="c-num">4</span>,
+  <span class="c-clave">"formulario"</span>: <span class="c-bool">true</span>, <span class="c-clave">"segundoIdioma"</span>: <span class="c-bool">false</span> }
+
+<span class="c-gris">// respuesta · 200 OK</span>
+{ <span class="c-clave">"base"</span>: <span class="c-num">600</span>, <span class="c-clave">"paginasAdicionales"</span>: <span class="c-num">150</span>,
+  <span class="c-clave">"formulario"</span>: <span class="c-num">80</span>, <span class="c-clave">"segundoIdioma"</span>: <span class="c-num">0</span>,
+  <span class="c-clave">"total"</span>: <span class="c-num">830</span>, <span class="c-clave">"moneda"</span>: <span class="c-texto">"EUR"</span> }</code></pre>
+      </div>
+
+      <a href="#como" class="hero__bajar" aria-label="Bajar">↓</a>
+    </section>
+
+    <!-- CÓMO FUNCIONA -->
+    <section id="como" class="seccion">
+      <header class="seccion__cabecera revelar">
+        <span class="seccion__numero">[ 01 ] // proceso</span>
+        <h2>Cómo funciona</h2>
+        <p>Tres pasos, y el servidor tiene siempre la última palabra.</p>
+      </header>
+      <div class="rejilla rejilla--3">
+        <article class="paso cristal revelar">
+          <span class="paso__icono">✎</span>
+          <span class="paso__fase">FASE_01</span>
+          <h3>Envías lo que quieres</h3>
+          <p>Tipo de web, número de páginas, formulario y segundo idioma. Solo esos cuatro campos.</p>
+        </article>
+        <article class="paso cristal revelar" style="--retraso: .1s">
+          <span class="paso__icono">✓</span>
+          <span class="paso__fase">FASE_02</span>
+          <h3>El servidor valida</h3>
+          <p>Si falta un campo o un valor no es válido, responde 400 explicando exactamente qué está mal.</p>
+        </article>
+        <article class="paso cristal revelar" style="--retraso: .2s">
+          <span class="paso__icono">∑</span>
+          <span class="paso__fase">FASE_03</span>
+          <h3>Calcula con sus tarifas</h3>
+          <p>Base + páginas adicionales + extras. Si alguien envía su propio "total", se ignora.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- TARIFAS (se cargan desde GET /api/tarifas) -->
+    <section id="tarifas" class="seccion">
+      <header class="seccion__cabecera revelar">
+        <span class="seccion__numero">[ 02 ] // tarifas</span>
+        <h2>Tarifas</h2>
+        <p>Cargadas en directo desde <code>GET /api/tarifas</code>. Sin impuestos ni descuentos.</p>
+      </header>
+      <div class="rejilla rejilla--tarifas" id="lista-tarifas">
+        <div class="tarifa cristal esqueleto"></div>
+        <div class="tarifa cristal esqueleto"></div>
+        <div class="tarifa cristal esqueleto"></div>
+        <div class="tarifa cristal esqueleto"></div>
+        <div class="tarifa cristal esqueleto"></div>
+      </div>
+    </section>
+
+    <!-- CALCULADORA (usa POST /api/presupuesto) -->
+    <section id="calculadora" class="seccion">
+      <header class="seccion__cabecera revelar">
+        <span class="seccion__numero">[ 03 ] // calculadora</span>
+        <h2>Calcula tu presupuesto</h2>
+        <p>Configura tu web y mira cómo quedaría. El total que ves es el que devuelve el servidor.</p>
+      </header>
+
+      <div class="calculadora">
+        <div class="calculadora__controles">
+          <form class="formulario cristal revelar" id="formulario" novalidate>
+            <fieldset>
+              <legend>Tipo de web</legend>
+              <div class="segmentado" role="radiogroup">
+                <label><input type="radio" name="tipo" value="landing" checked><span>Landing</span></label>
+                <label><input type="radio" name="tipo" value="corporativa"><span>Corporativa</span></label>
+                <i class="segmentado__pastilla" aria-hidden="true"></i>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Páginas <output id="salida-paginas" for="paginas">1</output></legend>
+              <input type="range" id="paginas" name="paginas" min="1" max="20" value="1" class="deslizador">
+              <div class="deslizador__marcas"><span>1</span><span>10</span><span>20</span></div>
+            </fieldset>
+
+            <fieldset class="extras">
+              <legend>Extras</legend>
+              <label class="interruptor">
+                <input type="checkbox" name="formulario">
+                <span class="interruptor__pista"><i></i></span>
+                <span>Formulario de contacto</span>
+              </label>
+              <label class="interruptor">
+                <input type="checkbox" name="segundoIdioma">
+                <span class="interruptor__pista"><i></i></span>
+                <span>Segundo idioma</span>
+              </label>
+            </fieldset>
+          </form>
+
+          <aside class="resultado cristal cristal--liquido-suave borde-vivo revelar" style="--retraso: .1s" aria-live="polite">
+            <span class="resultado__titulo">Total estimado</span>
+            <strong class="resultado__total" id="total">—</strong>
+            <ul class="desglose" id="desglose"></ul>
+            <div class="aviso" id="aviso" hidden></div>
+            <details class="peticion">
+              <summary>Ver la petición JSON</summary>
+              <pre class="codigo codigo--pequeno"><code id="json-peticion"></code></pre>
+            </details>
+          </aside>
+        </div>
+
+        <!-- VISTA PREVIA: ejemplo de landing o de web corporativa -->
+        <div class="vista cristal borde-vivo revelar" style="--retraso: .15s">
+          <div class="vista__cabecera">
+            <span class="vista__etiqueta"><i></i> Vista previa</span>
+            <span class="vista__tipo" id="vista-tipo">Landing · 1 página</span>
+          </div>
+
+          <div class="navegador">
+            <div class="navegador__barra">
+              <span class="navegador__puntos"><i></i><i></i><i></i></span>
+              <span class="navegador__url"><b>🔒</b> <span id="vista-url">orbita.app</span></span>
+            </div>
+
+            <div class="navegador__pantalla" id="pantalla">
+              <span class="escaner" aria-hidden="true"></span>
+
+              <!-- Ejemplo LANDING: una sola página para vender un producto -->
+              <div class="sitio sitio--landing activo" data-sitio="landing" aria-label="Ejemplo de landing">
+                <div class="s-nav">
+                  <span class="s-logo"><i></i>Órbita</span>
+                  <span class="s-nav__der">
+                    <span class="s-idioma" data-extra="segundoIdioma"><b>ES</b> · EN</span>
+                    <span class="s-btn s-btn--peq">Descargar</span>
+                  </span>
+                </div>
+                <div class="s-hero">
+                  <div class="s-hero__texto">
+                    <span class="s-pastilla">✦ Nuevo · versión 2.0</span>
+                    <strong class="s-titulo">Construye hábitos que sí duran.</strong>
+                    <p>La app que convierte tus metas en pequeñas rutinas diarias.</p>
+                    <div class="s-botones">
+                      <span class="s-btn">Empieza gratis</span>
+                      <span class="s-btn s-btn--linea">Ver demo</span>
+                    </div>
+                  </div>
+                  <div class="s-movil">
+                    <span class="s-movil__anillo"></span>
+                    <i></i><i></i><i></i>
+                  </div>
+                </div>
+                <div class="s-ventajas">
+                  <div><b>◎</b><span>Recordatorios</span></div>
+                  <div><b>▲</b><span>Progreso</span></div>
+                  <div><b>✦</b><span>Rachas</span></div>
+                </div>
+                <div class="s-form" data-extra="formulario">
+                  <strong>¿Hablamos?</strong>
+                  <span class="s-input">Tu email</span>
+                  <span class="s-btn">Enviar</span>
+                </div>
+                <div class="s-pie">© Órbita · Todo en una sola página</div>
+              </div>
+
+              <!-- Ejemplo CORPORATIVA: varias páginas para presentar una empresa -->
+              <div class="sitio sitio--corporativa" data-sitio="corporativa" aria-label="Ejemplo de web corporativa">
+                <div class="s-nav">
+                  <span class="s-logo"><i></i>Vértice</span>
+                  <span class="s-menu" id="menu-corporativa"></span>
+                  <span class="s-idioma" data-extra="segundoIdioma"><b>ES</b> · EN</span>
+                </div>
+                <div class="s-hero">
+                  <div class="s-hero__texto">
+                    <span class="s-antetitulo">Consultoría estratégica</span>
+                    <strong class="s-titulo">Impulsamos empresas que miran al futuro.</strong>
+                    <p>Más de 20 años ayudando a crecer a compañías de todo el país.</p>
+                    <span class="s-btn">Conócenos</span>
+                  </div>
+                  <div class="s-imagen"><span></span><span></span></div>
+                </div>
+                <div class="s-logos"><span>Confían en nosotros</span><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="s-servicios">
+                  <div><b>01</b><strong>Estrategia</strong><i></i><i></i></div>
+                  <div><b>02</b><strong>Finanzas</strong><i></i><i></i></div>
+                  <div><b>03</b><strong>Personas</strong><i></i><i></i></div>
+                </div>
+                <div class="s-form" data-extra="formulario">
+                  <strong>Contacta con nosotros</strong>
+                  <span class="s-input">Nombre</span>
+                  <span class="s-input">Email</span>
+                  <span class="s-btn">Enviar</span>
+                </div>
+                <div class="s-pie"><span>Vértice Consultores</span><span>Aviso legal · Privacidad</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mapa">
+            <span class="mapa__titulo">Mapa del sitio</span>
+            <div class="mapa__paginas" id="mapa"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API -->
+    <section id="api" class="seccion">
+      <header class="seccion__cabecera revelar">
+        <span class="seccion__numero">[ 04 ] // api</span>
+        <h2>La API</h2>
+        <p>Tres rutas. JSON de entrada, JSON de salida.</p>
+      </header>
+      <div class="rutas">
+        <article class="ruta cristal revelar">
+          <span class="metodo metodo--get">GET</span>
+          <code>/api/estado</code>
+          <p>Comprueba que el servicio funciona.</p>
+          <span class="ruta__estado" id="ruta-estado">comprobando…</span>
+        </article>
+        <article class="ruta cristal revelar" style="--retraso: .08s">
+          <span class="metodo metodo--get">GET</span>
+          <code>/api/tarifas</code>
+          <p>Devuelve las tarifas que usa el servidor.</p>
+        </article>
+        <article class="ruta cristal revelar" style="--retraso: .16s">
+          <span class="metodo metodo--post">POST</span>
+          <code>/api/presupuesto</code>
+          <p>Recibe <code>tipo</code>, <code>paginas</code>, <code>formulario</code> y <code>segundoIdioma</code> y devuelve el desglose.</p>
+        </article>
+      </div>
+
+      <div class="terminal cristal ventana revelar">
+        <div class="ventana__barra"><i></i><i></i><i></i><span>terminal</span></div>
+        <pre class="codigo"><code><span class="c-gris">$</span> curl -X POST http://localhost:4000/api/presupuesto \
+    -H <span class="c-texto">"Content-Type: application/json"</span> \
+    -d <span class="c-texto">'{"tipo":"landing","paginas":2,"formulario":true,"segundoIdioma":true}'</span>
+
+{ <span class="c-clave">"base"</span>:<span class="c-num">300</span>, <span class="c-clave">"paginasAdicionales"</span>:<span class="c-num">50</span>, <span class="c-clave">"formulario"</span>:<span class="c-num">80</span>, <span class="c-clave">"segundoIdioma"</span>:<span class="c-num">150</span>, <span class="c-clave">"total"</span>:<span class="c-num">580</span>, <span class="c-clave">"moneda"</span>:<span class="c-texto">"EUR"</span> }</code></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <p>Presupuesta mi web · Módulo 0613 · Desarrollo web en entorno servidor</p>
+    <a href="https://github.com/aldringcorcho/presupuesta-mi-web" target="_blank" rel="noopener">Código en GitHub ↗</a>
+  </footer>
+
+  <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
