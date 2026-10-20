@@ -75,9 +75,15 @@ if (esChromium) document.documentElement.classList.add("refraccion");
 
 // El reflejo del cristal y la luz del fondo siguen al ratón
 const luzCursor = document.querySelector(".luz-cursor");
+const fondo = document.querySelector(".fondo");
+// Si el ratón sale de la ventana, la luz se apaga
+document.documentElement.addEventListener("mouseleave", () => fondo.classList.remove("con-cursor"));
 if (!menosMovimiento) {
   document.addEventListener("pointermove", (e) => {
     luzCursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+    fondo.style.setProperty("--cx", `${e.clientX}px`);
+    fondo.style.setProperty("--cy", `${e.clientY}px`);
+    fondo.classList.add("con-cursor");
     document.querySelectorAll(".cristal").forEach((el) => {
       const r = el.getBoundingClientRect();
       if (r.bottom < 0 || r.top > window.innerHeight) return;
