@@ -230,142 +230,9 @@
         <p>Configura tu web y mira cómo quedaría. El total que ves es el que devuelve el servidor.</p>
       </header>
 
-      <div class="calculadora">
-        <div class="calculadora__controles">
-          <form class="formulario cristal revelar" id="formulario" novalidate>
-            <fieldset>
-              <legend>Tipo de web</legend>
-              <div class="segmentado" role="radiogroup">
-                <label><input type="radio" name="tipo" value="landing" checked><span>Landing</span></label>
-                <label><input type="radio" name="tipo" value="corporativa"><span>Corporativa</span></label>
-                <i class="segmentado__pastilla" aria-hidden="true"></i>
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend>Páginas <output id="salida-paginas" for="paginas">1</output></legend>
-              <input type="range" id="paginas" name="paginas" min="1" max="20" value="1" class="deslizador">
-              <div class="deslizador__marcas"><span>1</span><span>10</span><span>20</span></div>
-            </fieldset>
-
-            <fieldset class="extras">
-              <legend>Extras</legend>
-              <label class="interruptor">
-                <input type="checkbox" name="formulario">
-                <span class="interruptor__pista"><i></i></span>
-                <span>Formulario de contacto</span>
-              </label>
-              <label class="interruptor">
-                <input type="checkbox" name="segundoIdioma">
-                <span class="interruptor__pista"><i></i></span>
-                <span>Segundo idioma</span>
-              </label>
-            </fieldset>
-          </form>
-
-          <aside class="resultado cristal cristal--liquido-suave borde-vivo revelar" style="--retraso: .1s" aria-live="polite">
-            <span class="resultado__titulo">Total estimado</span>
-            <strong class="resultado__total" id="total">—</strong>
-            <ul class="desglose" id="desglose"></ul>
-            <div class="aviso" id="aviso" hidden></div>
-            <details class="peticion">
-              <summary>Ver la petición JSON</summary>
-              <pre class="codigo codigo--pequeno"><code id="json-peticion"></code></pre>
-            </details>
-          </aside>
-        </div>
-
-        <!-- VISTA PREVIA: ejemplo de landing o de web corporativa -->
-        <div class="vista cristal borde-vivo revelar" style="--retraso: .15s">
-          <div class="vista__cabecera">
-            <span class="vista__etiqueta"><i></i> Vista previa</span>
-            <span class="vista__tipo" id="vista-tipo">Landing · 1 página</span>
-          </div>
-
-          <div class="navegador">
-            <div class="navegador__barra">
-              <span class="navegador__puntos"><i></i><i></i><i></i></span>
-              <span class="navegador__url"><b>🔒</b> <span id="vista-url">orbita.app</span></span>
-            </div>
-
-            <div class="navegador__pantalla" id="pantalla">
-              <span class="escaner" aria-hidden="true"></span>
-
-              <!-- Ejemplo LANDING: una sola página para vender un producto -->
-              <div class="sitio sitio--landing activo" data-sitio="landing" aria-label="Ejemplo de landing">
-                <div class="s-nav">
-                  <span class="s-logo"><i></i>Órbita</span>
-                  <span class="s-nav__der">
-                    <span class="s-idioma" data-extra="segundoIdioma"><b>ES</b> · EN</span>
-                    <span class="s-btn s-btn--peq">Descargar</span>
-                  </span>
-                </div>
-                <div class="s-hero">
-                  <div class="s-hero__texto">
-                    <span class="s-pastilla">✦ Nuevo · versión 2.0</span>
-                    <strong class="s-titulo">Construye hábitos que sí duran.</strong>
-                    <p>La app que convierte tus metas en pequeñas rutinas diarias.</p>
-                    <div class="s-botones">
-                      <span class="s-btn">Empieza gratis</span>
-                      <span class="s-btn s-btn--linea">Ver demo</span>
-                    </div>
-                  </div>
-                  <div class="s-movil">
-                    <span class="s-movil__anillo"></span>
-                    <i></i><i></i><i></i>
-                  </div>
-                </div>
-                <div class="s-ventajas">
-                  <div><b>◎</b><span>Recordatorios</span></div>
-                  <div><b>▲</b><span>Progreso</span></div>
-                  <div><b>✦</b><span>Rachas</span></div>
-                </div>
-                <div class="s-form" data-extra="formulario">
-                  <strong>¿Hablamos?</strong>
-                  <span class="s-input">Tu email</span>
-                  <span class="s-btn">Enviar</span>
-                </div>
-                <div class="s-pie">© Órbita · Todo en una sola página</div>
-              </div>
-
-              <!-- Ejemplo CORPORATIVA: varias páginas para presentar una empresa -->
-              <div class="sitio sitio--corporativa" data-sitio="corporativa" aria-label="Ejemplo de web corporativa">
-                <div class="s-nav">
-                  <span class="s-logo"><i></i>Vértice</span>
-                  <span class="s-menu" id="menu-corporativa"></span>
-                  <span class="s-idioma" data-extra="segundoIdioma"><b>ES</b> · EN</span>
-                </div>
-                <div class="s-hero">
-                  <div class="s-hero__texto">
-                    <span class="s-antetitulo">Consultoría estratégica</span>
-                    <strong class="s-titulo">Impulsamos empresas que miran al futuro.</strong>
-                    <p>Más de 20 años ayudando a crecer a compañías de todo el país.</p>
-                    <span class="s-btn">Conócenos</span>
-                  </div>
-                  <div class="s-imagen"><span></span><span></span></div>
-                </div>
-                <div class="s-logos"><span>Confían en nosotros</span><i></i><i></i><i></i><i></i><i></i></div>
-                <div class="s-servicios">
-                  <div><b>01</b><strong>Estrategia</strong><i></i><i></i></div>
-                  <div><b>02</b><strong>Finanzas</strong><i></i><i></i></div>
-                  <div><b>03</b><strong>Personas</strong><i></i><i></i></div>
-                </div>
-                <div class="s-form" data-extra="formulario">
-                  <strong>Contacta con nosotros</strong>
-                  <span class="s-input">Nombre</span>
-                  <span class="s-input">Email</span>
-                  <span class="s-btn">Enviar</span>
-                </div>
-                <div class="s-pie"><span>Vértice Consultores</span><span>Aviso legal · Privacidad</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="mapa">
-            <span class="mapa__titulo">Mapa del sitio</span>
-            <div class="mapa__paginas" id="mapa"></div>
-          </div>
-        </div>
+      <!-- La calculadora es una pequeña app de React (ver calculadora.js) -->
+      <div id="app-calculadora" class="revelar">
+        <noscript><p class="mensaje-error cristal">La calculadora necesita JavaScript activado.</p></noscript>
       </div>
     </section>
 
@@ -413,5 +280,10 @@
 
   <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
   <script src="app.js"></script>
+  <!-- React 18 + htm (JSX sin compilar) para la calculadora -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+  <script type="module" src="calculadora.js"></script>
 </body>
 </html>

@@ -124,7 +124,8 @@ presupuesta-mi-web/
 ├── public/
 │   ├── index.html     → landing de presentación
 │   ├── estilos.css    → estilos (efecto liquid glass)
-│   └── app.js         → smooth scroll (Lenis) y conexión con la API
+│   ├── app.js         → smooth scroll (Lenis), efectos, estado y tarifas
+│   └── calculadora.js → calculadora y vista previa hechas con React (por CDN, sin compilar)
 ├── pruebas/
 │   └── pruebas.js     → lanza todas las pruebas automáticamente
 ├── package.json
