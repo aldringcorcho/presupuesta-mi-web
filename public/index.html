@@ -39,6 +39,7 @@
     </a>
     <nav class="nav__enlaces" aria-label="Secciones">
       <a href="#como">Cómo funciona</a>
+      <a href="#caracteristicas">Características</a>
       <a href="#tarifas">Tarifas</a>
       <a href="#calculadora">Calculadora</a>
       <a href="#api">API</a>
@@ -108,10 +109,106 @@
       </div>
     </section>
 
+    <!-- CARACTERÍSTICAS: lista numerada + panel que cambia (en móvil, acordeón) -->
+    <section id="caracteristicas" class="seccion">
+      <div class="caracteristicas">
+        <div class="caracteristicas__lista">
+          <header class="seccion__cabecera revelar">
+            <span class="seccion__numero">[ 02 ] // características</span>
+            <h2>Características.</h2>
+          </header>
+
+          <ul class="lista-caracteristicas" id="lista-caracteristicas">
+            <li class="revelar"><button type="button" aria-expanded="true"><span class="lista-caracteristicas__num">1</span><span>Valida cada dato antes de calcular.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
+            <li class="revelar" style="--retraso: .07s"><button type="button" aria-expanded="false"><span class="lista-caracteristicas__num">2</span><span>El servidor tiene la última palabra.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
+            <li class="revelar" style="--retraso: .14s"><button type="button" aria-expanded="false"><span class="lista-caracteristicas__num">3</span><span>Las tarifas viven en un único archivo.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
+            <li class="revelar" style="--retraso: .21s"><button type="button" aria-expanded="false"><span class="lista-caracteristicas__num">4</span><span>Pruebas automáticas con un solo comando.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
+            <li class="revelar" style="--retraso: .28s"><button type="button" aria-expanded="false"><span class="lista-caracteristicas__num">5</span><span>Código separado por responsabilidades.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
+          </ul>
+        </div>
+
+        <!-- Panel (escritorio). Cada .panel__item se copia también al acordeón del móvil -->
+        <div class="panel cristal borde-vivo revelar" id="panel-caracteristicas">
+          <div class="panel__item activo" aria-label="Validación">
+            <div class="ventana__barra"><i></i><i></i><i></i><span>POST /api/presupuesto · 400</span></div>
+            <pre class="codigo"><code><span class="c-gris">// petición con un valor fuera de rango</span>
+{ <span class="c-clave">"tipo"</span>: <span class="c-texto">"corporativa"</span>, <span class="c-clave">"paginas"</span>: <span class="c-num">0</span>, ... }
+
+<span class="c-gris">// respuesta · 400 Bad Request</span>
+{ <span class="c-clave">"error"</span>: <span class="c-texto">"Solicitud incorrecta"</span>,
+  <span class="c-clave">"detalles"</span>: [
+    <span class="c-texto">"\"paginas\" debe ser un número entero
+     entre 1 y 20 (recibido: 0)."</span>
+  ] }</code></pre>
+            <p class="panel__nota">Comprueba que estén los 4 campos, que <code>tipo</code> sea válido, que <code>paginas</code> sea un entero de 1 a 20 y que los extras sean <code>true</code> o <code>false</code>.</p>
+          </div>
+
+          <div class="panel__item" aria-label="El servidor decide">
+            <div class="ventana__barra"><i></i><i></i><i></i><span>POST /api/presupuesto · 200</span></div>
+            <pre class="codigo"><code><span class="c-gris">// el cliente intenta imponer su precio</span>
+{ <span class="c-clave">"tipo"</span>: <span class="c-texto">"corporativa"</span>, <span class="c-clave">"paginas"</span>: <span class="c-num">4</span>,
+  <span class="c-clave">"formulario"</span>: <span class="c-bool">true</span>, <span class="c-clave">"segundoIdioma"</span>: <span class="c-bool">false</span>,
+  <span class="c-tachado"><span class="c-clave">"total"</span>: <span class="c-num">1</span>, <span class="c-clave">"base"</span>: <span class="c-num">0</span></span> }
+
+<span class="c-gris">// se ignora: el total sale de sus tarifas</span>
+{ ..., <span class="c-clave">"total"</span>: <span class="c-num">830</span>, <span class="c-clave">"moneda"</span>: <span class="c-texto">"EUR"</span> }</code></pre>
+            <p class="panel__nota">Solo se usan los 4 campos permitidos. Cualquier otra propiedad que llegue se descarta.</p>
+          </div>
+
+          <div class="panel__item" aria-label="Tarifas">
+            <div class="ventana__barra"><i></i><i></i><i></i><span>src/tarifas.js</span></div>
+            <pre class="codigo"><code><span class="c-gris">// Es el ÚNICO sitio donde están los precios.</span>
+<span class="c-bool">const</span> TARIFAS = Object.freeze({
+  <span class="c-clave">landing</span>: <span class="c-num">300</span>,
+  <span class="c-clave">corporativa</span>: <span class="c-num">600</span>,
+  <span class="c-clave">paginaAdicional</span>: <span class="c-num">50</span>,
+  <span class="c-clave">formulario</span>: <span class="c-num">80</span>,
+  <span class="c-clave">segundoIdioma</span>: <span class="c-num">150</span>,
+  <span class="c-clave">moneda</span>: <span class="c-texto">"EUR"</span>
+});</code></pre>
+            <p class="panel__nota">Cambiar un precio es tocar una línea. La API, la calculadora y esta landing lo leen de aquí.</p>
+          </div>
+
+          <div class="panel__item" aria-label="Pruebas">
+            <div class="ventana__barra"><i></i><i></i><i></i><span>terminal</span></div>
+            <pre class="codigo codigo--terminal"><code><span class="c-gris">$</span> npm test
+<span class="c-ok">OK</span>  Caso 6 (paginas: 21) → 400
+<span class="c-ok">OK</span>  Caso 7 (paginas: 2.5) → 400
+<span class="c-ok">OK</span>  Caso 8 (tipo: "tienda") → 400
+<span class="c-ok">OK</span>  Caso 9 (formulario: "false") → 400
+<span class="c-ok">OK</span>  Caso 10 (Intenta imponer total: 1) → 200 · 830 €
+<span class="c-ok">OK</span>  Caso 11 (paginas: "4" (texto)) → 400
+
+<span class="c-ok">11/11 pruebas correctas</span></code></pre>
+            <p class="panel__nota">Comprueba las tres rutas y todos los casos de la tabla del README, válidos e inválidos.</p>
+          </div>
+
+          <div class="panel__item" aria-label="Arquitectura">
+            <div class="ventana__barra"><i></i><i></i><i></i><span>estructura</span></div>
+            <div class="flujo">
+              <span class="flujo__nodo flujo__nodo--borde">Petición JSON</span>
+              <span class="flujo__flecha">↓</span>
+              <span class="flujo__nodo"><b>server.js</b> rutas y puerto</span>
+              <span class="flujo__flecha">↓</span>
+              <span class="flujo__nodo"><b>validar.js</b> comprueba los datos</span>
+              <span class="flujo__flecha">↓</span>
+              <span class="flujo__fila">
+                <span class="flujo__nodo"><b>calcular.js</b> hace la suma</span>
+                <span class="flujo__flecha flujo__flecha--lado">←</span>
+                <span class="flujo__nodo"><b>tarifas.js</b> precios</span>
+              </span>
+              <span class="flujo__flecha">↓</span>
+              <span class="flujo__nodo flujo__nodo--borde">Respuesta JSON</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- TARIFAS (se cargan desde GET /api/tarifas) -->
     <section id="tarifas" class="seccion">
       <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 02 ] // tarifas</span>
+        <span class="seccion__numero">[ 03 ] // tarifas</span>
         <h2>Tarifas</h2>
         <p>Cargadas en directo desde <code>GET /api/tarifas</code>. Sin impuestos ni descuentos.</p>
       </header>
@@ -127,7 +224,7 @@
     <!-- CALCULADORA (usa POST /api/presupuesto) -->
     <section id="calculadora" class="seccion">
       <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 03 ] // calculadora</span>
+        <span class="seccion__numero">[ 04 ] // calculadora</span>
         <h2>Calcula tu presupuesto</h2>
         <p>Configura tu web y mira cómo quedaría. El total que ves es el que devuelve el servidor.</p>
       </header>
@@ -274,7 +371,7 @@
     <!-- API -->
     <section id="api" class="seccion">
       <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 04 ] // api</span>
+        <span class="seccion__numero">[ 05 ] // api</span>
         <h2>La API</h2>
         <p>Tres rutas. JSON de entrada, JSON de salida.</p>
       </header>

@@ -105,6 +105,36 @@ if (titular && !menosMovimiento) {
   setTimeout(() => requestAnimationFrame(descifrar), 300);
 }
 
+// ===== Características: lista numerada + panel (en móvil, acordeón) =====
+const elementosLista = document.querySelectorAll("#lista-caracteristicas li");
+const itemsPanel = document.querySelectorAll("#panel-caracteristicas .panel__item");
+
+// En móvil el contenido se abre debajo de cada punto: copiamos el del panel
+elementosLista.forEach((li, i) => {
+  const copia = document.createElement("div");
+  copia.className = "panel-movil cristal";
+  copia.innerHTML = itemsPanel[i].innerHTML;
+  li.querySelector(".lista-caracteristicas__movil > div").appendChild(copia);
+});
+
+let caracteristicaActiva = 0;
+function activarCaracteristica(indice) {
+  if (indice === caracteristicaActiva) return;
+  const anterior = itemsPanel[caracteristicaActiva];
+  anterior.classList.remove("activo");
+  anterior.classList.add("saliendo");
+  setTimeout(() => anterior.classList.remove("saliendo"), 350);
+  itemsPanel[indice].classList.add("activo");
+
+  elementosLista.forEach((li, i) => {
+    li.classList.toggle("activo", i === indice);
+    li.querySelector("button").setAttribute("aria-expanded", i === indice);
+  });
+  caracteristicaActiva = indice;
+}
+elementosLista[0].classList.add("activo");
+elementosLista.forEach((li, i) => li.querySelector("button").addEventListener("click", () => activarCaracteristica(i)));
+
 // ===== 4. Vista previa: ejemplo de landing o de web corporativa =====
 const NOMBRES_PAGINAS = [
   "Inicio", "Servicios", "Nosotros", "Proyectos", "Blog", "Contacto", "Equipo", "Clientes", "Precios", "FAQ",
