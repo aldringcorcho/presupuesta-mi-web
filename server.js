@@ -13,6 +13,7 @@ const {
 } = require("./src/asistente");
 const { validarSeleccion, construirPresupuesto } = require("./src/confirmar");
 const { generarPdf } = require("./src/pdf");
+const { buscarFotos } = require("./src/fotos");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -112,12 +113,15 @@ app.post("/api/propuesta", exigirJson, async (req, res) => {
   try {
     const json = await pedirPropuesta(solicitud.datos);
     const propuesta = enriquecerPropuesta(validarRespuestaIA(json));
+    // Una foto de stock distinta para la vista previa de cada propuesta (si hay clave de Pexels)
+    const fotos = await buscarFotos(propuesta.fotoBusqueda, { cantidad: Math.max(propuesta.propuestas.length, 1) });
+    propuesta.propuestas.forEach((p, i) => (p.foto = fotos.length ? fotos[i % fotos.length] : null));
     res.json({ cliente: solicitud.datos.cliente, ...propuesta });
   } catch (err) {
     if (!(err instanceof ErrorIA)) throw err;
     // Al usuario solo le llega el mensaje amable; el detalle técnico se queda en el log.
     console.error("[OpenAI]", err.message, err.causa ?? "");
-    res.status(err.estado).json({ error: err.message, reintentar: err.reintentar });
+    res.status(err.estado).json({ error: err.message, reintentar: err.reintentar, ...(err.codigo && { codigo: err.codigo }) });
   }
 });
 

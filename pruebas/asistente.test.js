@@ -323,3 +323,329 @@ test("catálogo: GET /api/catalogo devuelve los servicios con su regla de precio
   assert.deepEqual(c.servicios.map((s) => s.id), ["landing", "corporativa", "formulario", "segundo-idioma"]);
   assert.ok(c.servicios.every((s) => s.id && s.nombre && s.descripcion && s.regla));
 });
+
+// ===== Mejoras de la IA: tono, preguntas guiadas, ajustes y segunda ronda =====
+
+test("tono: cercano por defecto, formal si se pide y error si no es válido", async () => {
+  siguiente = () => respuestaModelo({ resumen: "Web sencilla.", servicios: [], paginas: null, preguntaPrecioOPlazo: false, pendientes: [] });
+
+  await post("/api/propuesta", { cliente: "Cliente Ficticio", descripcion: RESTAURANTE });
+  let sistema = ultimaPeticion.cuerpo.input.find((m) => m.role === "system").content;
+  assert.match(sistema, /tono CERCANO/);
+  assert.match(sistema, /de "tú"/);
+
+  await post("/api/propuesta", { cliente: "Cliente Ficticio", descripcion: RESTAURANTE, tono: "formal" });
+  sistema = ultimaPeticion.cuerpo.input.find((m) => m.role === "system").content;
+  assert.match(sistema, /tono FORMAL/);
+  assert.match(sistema, /de "usted"/);
+
+  const r = await post("/api/propuesta", { cliente: "Cliente Ficticio", descripcion: RESTAURANTE, tono: "pirata" });
+  assert.equal(r.status, 400);
+});
+
+test("ajustes: temperature 0.2, salvo en modelos de razonamiento que no la admiten", () => {
+  const { construirPeticion } = require("../src/asistente");
+  const datos = { cliente: "X", descripcion: "Una web sencilla", tono: "cercano", respuestas: [] };
+  assert.equal(construirPeticion(datos, "gpt-4.1-mini").temperature, 0.2);
+  assert.equal(construirPeticion(datos, "gpt-5-mini").temperature, undefined);
+  assert.equal(construirPeticion(datos, "o3").temperature, undefined);
+});
+
+test("preguntas guiadas: se validan las opciones y se limitan a 2 preguntas", async () => {
+  siguiente = () =>
+    respuestaModelo({
+      resumen: "Web para un negocio ficticio.",
+      servicios: [{ id: "landing", justificacion: "Basta con una página." }],
+      paginas: null,
+      preguntaPrecioOPlazo: false,
+      pendientes: [
+        {
+          tipo: "aclaracion",
+          texto: "¿Una página o varias?",
+          motivo: "Define el tipo de web.",
+          opciones: [
+            { texto: "Una", accion: "elegir:landing", paginas: null },
+            { texto: "Varias", accion: "elegir:corporativa", paginas: null },
+            { texto: "Tienda", accion: "elegir:tienda", paginas: null } // acción inexistente → fuera
+          ]
+        },
+        {
+          tipo: "aclaracion",
+          texto: "¿Cuántas páginas?",
+          motivo: "Cada página adicional se presupuesta aparte.",
+          opciones: [
+            { texto: "4 páginas", accion: "paginas", paginas: 4 },
+            { texto: "50 páginas", accion: "paginas", paginas: 50 }, // fuera de rango → fuera
+            { texto: "Muchas", accion: "paginas", paginas: null } // sin número → fuera
+          ]
+        },
+        { tipo: "aclaracion", texto: "¿Formulario?", motivo: "", opciones: [{ texto: "Sí", accion: "anadir:formulario", paginas: null }] },
+        { tipo: "aclaracion", texto: "¿Idiomas?", motivo: "", opciones: [] }, // cuarta pregunta → fuera
+        {
+          tipo: "fuera_de_catalogo",
+          texto: "Blog con gestor de contenidos.",
+          motivo: "No está en el catálogo.",
+          opciones: [{ texto: "Sí", accion: "ninguna", paginas: null }] // en fuera_de_catalogo no hay opciones
+        }
+      ]
+    });
+
+  const r = await post("/api/propuesta", { cliente: "Negocio Ficticio", descripcion: "Quiero una web para mi negocio." });
+  const p = await r.json();
+  const aclaraciones = p.pendientes.filter((x) => x.tipo === "aclaracion");
+
+  assert.equal(aclaraciones.length, 2, "como mucho 2 preguntas (las propuestas ya resuelven tipo y páginas)");
+  assert.deepEqual(aclaraciones[0].opciones.map((o) => o.accion), ["elegir:landing", "elegir:corporativa"]);
+  assert.deepEqual(aclaraciones[1].opciones, [{ texto: "4 páginas", accion: "paginas", paginas: 4 }]);
+  assert.equal(aclaraciones[0].motivo, "Define el tipo de web.");
+  assert.deepEqual(p.pendientes.find((x) => x.tipo === "fuera_de_catalogo").opciones, []);
+
+  // El esquema que se envía a OpenAI solo permite acciones generadas desde el catálogo
+  const esquemaOpcion = ultimaPeticion.cuerpo.text.format.schema.properties.pendientes.items.properties.opciones.items;
+  assert.ok(esquemaOpcion.properties.accion.enum.includes("anadir:segundo-idioma"));
+  assert.ok(!esquemaOpcion.properties.accion.enum.includes("elegir:tienda"));
+});
+
+test("precio o plazo: el servidor añade su propia nota (no la redacta la IA)", async () => {
+  const { NOTA_PRECIO_PLAZO } = require("../src/asistente");
+  siguiente = () =>
+    respuestaModelo({ resumen: "Web para una tienda ficticia.", servicios: [], paginas: null, preguntaPrecioOPlazo: true, pendientes: [] });
+  const r = await post("/api/propuesta", { cliente: "Moda Ficticia", descripcion: "¿Cuánto cuesta una web y cuándo estaría?" });
+  const p = await r.json();
+  assert.deepEqual(p.pendientes, [{ tipo: "nota", texto: NOTA_PRECIO_PLAZO, motivo: "", opciones: [] }]);
+});
+
+test("segunda ronda: las respuestas del cliente se envían a la IA y se validan", async () => {
+  siguiente = () =>
+    respuestaModelo({
+      resumen: "Web con varias secciones para un negocio ficticio.",
+      servicios: [
+        { id: "corporativa", justificacion: "Has pedido varias secciones." },
+        { id: "formulario", justificacion: "Quieres que te contacten." }
+      ],
+      paginas: 4,
+      preguntaPrecioOPlazo: false,
+      pendientes: []
+    });
+
+  const respuestas = [
+    { pregunta: "¿Una página o varias?", respuesta: "Varias" },
+    { pregunta: "¿Cuántas páginas?", respuesta: "4 páginas" }
+  ];
+  const r = await post("/api/propuesta", { cliente: "Negocio Ficticio", descripcion: "Quiero una web para mi negocio.", respuestas });
+  assert.equal(r.status, 200);
+  const p = await r.json();
+  assert.deepEqual(p.servicios.map((s) => s.id), ["corporativa", "formulario"]);
+  assert.equal(p.paginas, 4);
+
+  const usuario = ultimaPeticion.cuerpo.input.find((m) => m.role === "user").content;
+  assert.ok(usuario.includes("Respuestas del cliente"));
+  assert.ok(usuario.includes("¿Cuántas páginas? → 4 páginas"));
+
+  // Formatos no válidos → 400 sin llamar a OpenAI
+  const antes = llamadas;
+  let e = await post("/api/propuesta", { cliente: "X", descripcion: "Quiero una web para mi negocio.", respuestas: "varias" });
+  assert.equal(e.status, 400);
+  e = await post("/api/propuesta", {
+    cliente: "X",
+    descripcion: "Quiero una web para mi negocio.",
+    respuestas: Array.from({ length: 11 }, (_, i) => ({ pregunta: `P${i}`, respuesta: "R" }))
+  });
+  assert.equal(e.status, 400);
+  assert.equal(llamadas, antes);
+});
+
+// ===== Solo solicitudes de páginas web =====
+
+test("fuera de tema: si no pide una web (juego, receta…) → 422 sin propuesta", async () => {
+  const { MENSAJE_FUERA_DE_TEMA } = require("../src/asistente");
+  siguiente = () =>
+    respuestaModelo({ enTema: false, resumen: "", servicios: [], paginas: null, preguntaPrecioOPlazo: false, pendientes: [] });
+
+  const r = await post("/api/propuesta", { cliente: "Cliente Ficticio", descripcion: "Quiero que me crees un videojuego de plataformas." });
+  assert.equal(r.status, 422);
+  const e = await r.json();
+  assert.equal(e.codigo, "fuera_de_tema");
+  assert.equal(e.reintentar, false, "no tiene sentido reintentar lo mismo");
+  assert.equal(e.error, MENSAJE_FUERA_DE_TEMA);
+  assert.ok(!("servicios" in e), "no se devuelve ninguna propuesta");
+
+  // Las instrucciones explican qué es tema permitido
+  const sistema = ultimaPeticion.cuerpo.input.find((m) => m.role === "system").content;
+  assert.match(sistema, /Tema permitido/);
+  assert.ok(ultimaPeticion.cuerpo.text.format.schema.required.includes("enTema"));
+});
+
+test("fuera de tema: aunque la IA cuele servicios, si enTema es false se rechaza", async () => {
+  siguiente = () =>
+    respuestaModelo({
+      enTema: false,
+      resumen: "Un juego.",
+      servicios: [{ id: "landing", justificacion: "Para el juego." }],
+      paginas: 1,
+      preguntaPrecioOPlazo: false,
+      pendientes: []
+    });
+  const r = await post("/api/propuesta", { cliente: "Cliente Ficticio", descripcion: "Hazme un juego de cartas online." });
+  assert.equal(r.status, 422);
+});
+
+test("petición mixta: web + algo ajeno → se presupuesta la web y lo ajeno queda fuera de catálogo", async () => {
+  siguiente = () =>
+    respuestaModelo({
+      enTema: true,
+      resumen: "Quieres una web para tu restaurante con un minijuego para niños.",
+      servicios: [{ id: "corporativa", justificacion: "Necesitas varias secciones." }],
+      paginas: null,
+      preguntaPrecioOPlazo: false,
+      pendientes: [{ tipo: "fuera_de_catalogo", texto: "Minijuego para niños: se valorará aparte.", motivo: "", opciones: [] }]
+    });
+  const r = await post("/api/propuesta", { cliente: "Restaurante Ficticio", descripcion: "Web para mi restaurante con un minijuego para niños." });
+  assert.equal(r.status, 200);
+  const p = await r.json();
+  assert.deepEqual(p.servicios.map((s) => s.id), ["corporativa"]);
+  assert.ok(p.pendientes.some((x) => x.tipo === "fuera_de_catalogo" && x.texto.includes("Minijuego")));
+});
+
+// ===== Tres propuestas para elegir =====
+
+const TRES = (extra = {}) => ({
+  enTema: true,
+  resumen: "Quieres una web para tu restaurante ficticio.",
+  preguntaPrecioOPlazo: false,
+  pendientes: [],
+  propuestas: [
+    { titulo: "Esencial", enfoque: "Lo imprescindible.", recomendada: false, paginas: 1, secciones: ["Inicio", "Carta", "Contacto"], estilo: "elegante",
+      servicios: [{ id: "landing", justificacion: "Sencilla." }, { id: "formulario", justificacion: "Reservas." }] },
+    { titulo: "A tu medida", enfoque: "Lo que pides.", recomendada: true, paginas: 4, secciones: ["Inicio", "Carta", "Reservas", "Contacto"], estilo: "elegante",
+      servicios: [{ id: "corporativa", justificacion: "Varias secciones." }, { id: "formulario", justificacion: "Reservas." }, { id: "segundo-idioma", justificacion: "Turistas." }] },
+    { titulo: "Completa", enfoque: "Con todo.", recomendada: false, paginas: 6, secciones: ["Inicio", "Carta", "Reservas", "Galería", "Equipo", "Contacto"], estilo: "vibrante",
+      servicios: [{ id: "corporativa", justificacion: "Varias secciones." }, { id: "formulario", justificacion: "Reservas." }, { id: "segundo-idioma", justificacion: "Turistas." }] }
+  ],
+  ...extra
+});
+
+test("tres propuestas: se validan y el servidor calcula el importe de cada una", async () => {
+  siguiente = () => respuestaModelo(TRES());
+  const r = await post("/api/propuesta", { cliente: "Restaurante Ficticio", descripcion: RESTAURANTE });
+  assert.equal(r.status, 200);
+  const p = await r.json();
+
+  assert.equal(p.propuestas.length, 3);
+  assert.deepEqual(p.propuestas.map((x) => x.importe), [300 + 80, 600 + 3 * 50 + 80 + 150, 600 + 5 * 50 + 80 + 150]); // 380, 980, 1080
+  assert.deepEqual(p.propuestas.map((x) => x.recomendada), [false, true, false]);
+  assert.equal(p.propuestas[0].servicios[0].nombre, "Landing page");
+  assert.deepEqual(p.propuestas[1].secciones, ["Inicio", "Carta", "Reservas", "Contacto"]);
+  // La raíz (servicios y páginas) es la propuesta recomendada
+  assert.deepEqual(p.servicios.map((s) => s.id), ["corporativa", "formulario", "segundo-idioma"]);
+  assert.equal(p.paginas, 4);
+
+  // El esquema que se envía a OpenAI pide las propuestas con su estilo
+  const esquema = ultimaPeticion.cuerpo.text.format.schema;
+  assert.ok(esquema.required.includes("propuestas"));
+  assert.ok(esquema.properties.propuestas.items.properties.estilo.enum.includes("elegante"));
+});
+
+test("tres propuestas: se corrigen las propuestas defectuosas", async () => {
+  const datos = TRES();
+  datos.propuestas[0].paginas = 7; // una landing siempre tiene 1 página
+  datos.propuestas[0].estilo = "barroco"; // estilo desconocido → moderno
+  datos.propuestas[1].recomendada = false; // ninguna recomendada → la del medio
+  datos.propuestas[2].servicios = [{ id: "formulario", justificacion: "Solo extra." }]; // sin tipo de web → se descarta
+  datos.propuestas.push({ ...datos.propuestas[1], titulo: "Cuarta", paginas: 8 }); // distinta de las demás: ocupa el hueco de la descartada
+  siguiente = () => respuestaModelo(datos);
+
+  const p = await (await post("/api/propuesta", { cliente: "Restaurante Ficticio", descripcion: RESTAURANTE })).json();
+  assert.deepEqual(p.propuestas.map((x) => x.titulo), ["Esencial", "A tu medida", "Cuarta"]);
+  assert.equal(p.propuestas[0].paginas, 1);
+  assert.equal(p.propuestas[0].estilo, "moderno");
+  assert.deepEqual(p.propuestas.map((x) => x.recomendada), [false, true, false]);
+  assert.ok(p.avisos.some((a) => a.includes("Completa") && a.includes("tipo de web")));
+});
+
+test("tres propuestas: «otra» envía la descripción detallada del cliente y devuelve propuestas nuevas", async () => {
+  siguiente = () => respuestaModelo(TRES());
+  const detalle = "Ninguna me convence: quiero solo dos páginas, carta y contacto, sin idiomas.";
+  const r = await post("/api/propuesta", {
+    cliente: "Restaurante Ficticio",
+    descripcion: RESTAURANTE,
+    respuestas: [{ pregunta: "El cliente describe con más detalle lo que quiere (ninguna propuesta le convencía)", respuesta: detalle }]
+  });
+  assert.equal(r.status, 200);
+  const usuario = ultimaPeticion.cuerpo.input.find((m) => m.role === "user").content;
+  assert.ok(usuario.includes(detalle));
+  const sistema = ultimaPeticion.cuerpo.input.find((m) => m.role === "system").content;
+  assert.match(sistema, /ninguna propuesta le convencía, crea 3 propuestas nuevas/);
+});
+
+test("tres propuestas: el servidor descarta las repetidas", async () => {
+  const datos = TRES();
+  datos.propuestas[2] = { ...datos.propuestas[1], titulo: "Repetida", recomendada: false }; // mismos servicios y páginas
+  siguiente = () => respuestaModelo(datos);
+  const p = await (await post("/api/propuesta", { cliente: "Restaurante Ficticio", descripcion: RESTAURANTE })).json();
+  assert.deepEqual(p.propuestas.map((x) => x.titulo), ["Esencial", "A tu medida"]);
+  const sistema = ultimaPeticion.cuerpo.input.find((m) => m.role === "system").content;
+  assert.match(sistema, /NUNCA repitas en dos propuestas/);
+});
+
+// ===== Maquetas: textos, sector y fotos de Pexels =====
+
+test("maquetas: sector, titular, botón, destacados, estilos distintos y secciones sin servicios", async () => {
+  const datos = TRES({ sector: "restauracion", fotoBusqueda: "restaurant dinner table!!" });
+  datos.propuestas.forEach((p, i) => Object.assign(p, { estilo: "elegante", titular: `Titular ${i}`, boton: "Reserva mesa", destacados: ["Carta de temporada", "Terraza", "Menú del día", "Sobra"] }));
+  datos.propuestas[1].secciones = ["Inicio", "Carta", "Formulario", "Segundo idioma", "Contacto"];
+  datos.propuestas[2].titular = "Desde 20 € por persona"; // con precio → se quita
+  siguiente = () => respuestaModelo(datos);
+
+  const p = await (await post("/api/propuesta", { cliente: "Restaurante Ficticio", descripcion: RESTAURANTE })).json();
+  assert.equal(p.sector, "restauracion");
+  assert.equal(p.fotoBusqueda, "restaurant dinner table");
+  assert.deepEqual(p.propuestas.map((x) => x.estilo), ["elegante", "moderno", "natural"], "un estilo distinto en cada propuesta");
+  assert.equal(p.propuestas[0].titular, "Titular 0");
+  assert.equal(p.propuestas[0].boton, "Reserva mesa");
+  assert.deepEqual(p.propuestas[0].destacados, ["Carta de temporada", "Terraza", "Menú del día"]);
+  assert.deepEqual(p.propuestas[1].secciones, ["Inicio", "Carta", "Contacto"]);
+  assert.equal(p.propuestas[2].titular, "", "el modelo no puede poner precios");
+  // Sin clave de Pexels no hay foto, y la propuesta llega igual
+  assert.ok(p.propuestas.every((x) => x.foto === null));
+});
+
+test("fotos: con clave de Pexels cada propuesta recibe una foto distinta (y si Pexels falla, no pasa nada)", async () => {
+  let peticionPexels = null;
+  let fallar = false;
+  const pexels = http.createServer((req, res) => {
+    peticionPexels = { url: req.url, clave: req.headers.authorization };
+    if (fallar) { res.writeHead(500); return res.end("error"); }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      photos: [1, 2, 3].map((n) => ({
+        url: `https://www.pexels.com/photo/${n}/`, photographer: `Autor ${n}`, alt: `Foto ${n}`, avg_color: "#336699",
+        src: { landscape: `https://images.pexels.com/photos/${n}/foto.jpg` }
+      }))
+    }));
+  });
+  await new Promise((ok) => pexels.listen(0, ok));
+  process.env.PEXELS_URL = `http://localhost:${pexels.address().port}/v1/search`;
+  process.env.PEXELS_API_KEY = "clave-pexels-de-prueba";
+  try {
+    siguiente = () => respuestaModelo(TRES({ sector: "moda", fotoBusqueda: "fashion boutique clothes" }));
+    let p = await (await post("/api/propuesta", { cliente: "Moda Ficticia", descripcion: "Quiero una web para mi tienda de ropa." })).json();
+    assert.deepEqual(p.propuestas.map((x) => x.foto.url), [1, 2, 3].map((n) => `https://images.pexels.com/photos/${n}/foto.jpg`));
+    assert.equal(p.propuestas[0].foto.autor, "Autor 1");
+    assert.equal(peticionPexels.clave, "clave-pexels-de-prueba", "la clave va en la cabecera, desde el servidor");
+    assert.match(peticionPexels.url, /query=fashion\+boutique\+clothes/);
+    assert.match(peticionPexels.url, /orientation=landscape/);
+
+    // Pexels caído: la propuesta llega igual, sin fotos
+    fallar = true;
+    siguiente = () => respuestaModelo(TRES({ sector: "moda", fotoBusqueda: "clothing store rack" }));
+    const r = await post("/api/propuesta", { cliente: "Moda Ficticia", descripcion: "Quiero una web para mi tienda de ropa." });
+    assert.equal(r.status, 200);
+    p = await r.json();
+    assert.ok(p.propuestas.every((x) => x.foto === null));
+  } finally {
+    delete process.env.PEXELS_URL;
+    delete process.env.PEXELS_API_KEY;
+    pexels.close();
+  }
+});

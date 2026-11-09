@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-paleta="azul">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,299 +7,83 @@
   <meta name="description" content="Describe tu proyecto y recibe una propuesta de servicios y un presupuesto en PDF, calculado por el servidor.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;600&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="estilos.css">
+  <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
-  <!-- Filtro SVG del efecto "liquid glass": deforma lo que hay detrás del cristal (solo Chromium) -->
-  <svg class="oculto" aria-hidden="true" width="0" height="0">
-    <filter id="liquido" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves="2" seed="7" result="ruido" />
-      <feGaussianBlur in="ruido" stdDeviation="2" result="ruidoSuave" />
-      <feDisplacementMap in="SourceGraphic" in2="ruidoSuave" scale="38" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-  </svg>
-
-  <!-- Fondo: rejilla en perspectiva, manchas de neón y luz que sigue al cursor -->
-  <div class="fondo" aria-hidden="true">
-    <div class="puntos"></div>
-    <span class="mancha mancha--1" data-parallax="0.15"></span>
-    <span class="mancha mancha--2" data-parallax="-0.1"></span>
-    <span class="mancha mancha--3" data-parallax="0.22"></span>
-    <span class="mancha mancha--4" data-parallax="-0.18"></span>
-    <div class="suelo"></div>
-    <div class="puntos-luz"></div>
-    <div class="luz-cursor"></div>
-    <div class="grano"></div>
+  <!-- Pantalla de carga: logotipo apilado y porcentaje (la quita fondo.js; el CSS la quita sola si algo falla) -->
+  <div id="cargador" class="cargador" aria-hidden="true">
+    <div class="cargador__logo"><span>PRESUPUESTA</span><span>MI</span><span>WEB</span></div>
+    <span id="cargador-cifra" class="cargador__cifra">0%</span>
   </div>
 
-  <header class="nav cristal cristal--liquido">
-    <a href="#inicio" class="marca">
-      <span class="marca__icono">€</span>
-      <span>Presupuesta<b>·</b>mi<b>·</b>web</span>
-    </a>
-    <nav class="nav__enlaces" aria-label="Secciones">
-      <a href="#como">Cómo funciona</a>
-      <a href="#caracteristicas">Características</a>
-      <a href="#tarifas">Tarifas</a>
-      <a href="#asistente">Asistente IA</a>
-      <a href="#calculadora">Calculadora</a>
-      <a href="#api">API</a>
-    </nav>
-    <a href="#asistente" class="boton boton--pequeno">Pedir propuesta</a>
+  <!-- Fondo: arcos de cromo negro con reflejos irisados (WebGL, ver fondo.js) -->
+  <canvas id="fondo-arcos" class="fondo-arcos" aria-hidden="true"></canvas>
+  <div class="velo" aria-hidden="true"></div>
+
+  <header class="cabecera">
+    <a href="./" class="marca" aria-label="Presupuesta mi web, inicio"><span>PRESUPUESTA</span><span>MI WEB</span></a>
+    <div class="cabecera__der">
+      <div class="paletas" role="group" aria-label="Paleta de colores">
+        <button type="button" data-elegir-paleta="azul" aria-label="Paleta Azul eléctrico"></button>
+        <button type="button" data-elegir-paleta="oceano" aria-label="Paleta Océano"></button>
+        <button type="button" data-elegir-paleta="hielo" aria-label="Paleta Hielo"></button>
+        <button type="button" data-elegir-paleta="indigo" aria-label="Paleta Índigo"></button>
+        <button type="button" data-elegir-paleta="espectro" aria-label="Paleta Espectro"></button>
+      </div>
+      <span class="cabecera__dato"><i></i> Asistente con IA</span>
+    </div>
   </header>
 
   <main>
-    <!-- HERO -->
-    <section id="inicio" class="hero">
-      <div class="hero__texto revelar">
-        <span class="etiqueta cristal"><span class="punto" id="punto-estado"></span> API REST · Node.js + Express</span>
-        <h1>Tu web, con un <span class="degradado" id="titular-efecto">precio claro</span> en segundos.</h1>
-        <p class="hero__sub">Elige el tipo de web, cuántas páginas necesitas y los extras. El servidor valida los datos y calcula el presupuesto con sus propias tarifas: nada de precios inventados desde el navegador.</p>
-        <div class="hero__acciones">
-          <a href="#asistente" class="boton cristal cristal--liquido borde-vivo">Cuéntanos tu proyecto →</a>
-          <a href="#calculadora" class="boton boton--fantasma">Calculadora</a>
-          <a href="#api" class="boton boton--fantasma">Ver la API</a>
-        </div>
-        <dl class="hero__datos">
-          <div><dt>7</dt><dd>rutas REST</dd></div>
-          <div><dt>26/26</dt><dd>pruebas OK</dd></div>
-          <div><dt>0</dt><dd>precios en el navegador</dd></div>
-        </dl>
-      </div>
+    <section class="portada" aria-labelledby="titulo">
+      <p class="antetitulo">Presupuestos web con inteligencia artificial</p>
+      <h1 id="titulo" class="titular">
+        <span class="palabra" style="--i: 0">Describe.</span>
+        <span class="palabra" style="--i: 1">Revisa.</span>
+        <span class="palabra" style="--i: 2">Descarga.</span>
+        <span class="palabra palabra--serif" style="--i: 3">¡Listo!</span>
+      </h1>
 
-      <div class="hero__tarjeta cristal ventana revelar" style="--retraso: .15s">
-        <div class="ventana__barra"><i></i><i></i><i></i><span>POST /api/presupuesto</span></div>
-        <pre class="codigo"><code><span class="c-gris">// petición</span>
-{ <span class="c-clave">"tipo"</span>: <span class="c-texto">"corporativa"</span>, <span class="c-clave">"paginas"</span>: <span class="c-num">4</span>,
-  <span class="c-clave">"formulario"</span>: <span class="c-bool">true</span>, <span class="c-clave">"segundoIdioma"</span>: <span class="c-bool">false</span> }
+      <form id="barra-portada" class="barra" autocomplete="off">
+        <label for="barra-portada-texto" class="oculto">Describe la web que necesitas</label>
+        <input id="barra-portada-texto" type="text" maxlength="2000" placeholder="Describe la web que necesitas…">
+        <button type="submit">Empezar <span aria-hidden="true">→</span></button>
+      </form>
 
-<span class="c-gris">// respuesta · 200 OK</span>
-{ <span class="c-clave">"base"</span>: <span class="c-num">600</span>, <span class="c-clave">"paginasAdicionales"</span>: <span class="c-num">150</span>,
-  <span class="c-clave">"formulario"</span>: <span class="c-num">80</span>, <span class="c-clave">"segundoIdioma"</span>: <span class="c-num">0</span>,
-  <span class="c-clave">"total"</span>: <span class="c-num">830</span>, <span class="c-clave">"moneda"</span>: <span class="c-texto">"EUR"</span> }</code></pre>
-      </div>
+      <ul class="ventajas">
+        <li>Solo servicios del catálogo</li>
+        <li>Importes calculados por el servidor</li>
+        <li>PDF al instante</li>
+      </ul>
 
-      <a href="#como" class="hero__bajar" aria-label="Bajar">↓</a>
+      <a href="#asistente" class="bajar">Scroll <span aria-hidden="true">↓</span></a>
     </section>
 
-    <!-- CÓMO FUNCIONA -->
-    <section id="como" class="seccion">
-      <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 01 ] // proceso</span>
-        <h2>Cómo funciona</h2>
-        <p>Tres pasos, y el servidor tiene siempre la última palabra.</p>
+    <!-- ASISTENTE (POST /api/propuesta → /api/confirmar → /api/presupuesto/pdf). App de React en asistente.js -->
+    <section id="asistente" class="seccion" aria-labelledby="titulo-asistente">
+      <header class="seccion__cabecera">
+        <p class="antetitulo">Tu presupuesto</p>
+        <h2 id="titulo-asistente">Cuéntanos tu proyecto</h2>
       </header>
-      <div class="rejilla rejilla--3">
-        <article class="paso cristal revelar">
-          <span class="paso__icono">✎</span>
-          <span class="paso__fase">FASE_01</span>
-          <h3>Envías lo que quieres</h3>
-          <p>Tipo de web, número de páginas, formulario y segundo idioma. Solo esos cuatro campos.</p>
-        </article>
-        <article class="paso cristal revelar" style="--retraso: .1s">
-          <span class="paso__icono">✓</span>
-          <span class="paso__fase">FASE_02</span>
-          <h3>El servidor valida</h3>
-          <p>Si falta un campo o un valor no es válido, responde 400 explicando exactamente qué está mal.</p>
-        </article>
-        <article class="paso cristal revelar" style="--retraso: .2s">
-          <span class="paso__icono">∑</span>
-          <span class="paso__fase">FASE_03</span>
-          <h3>Calcula con sus tarifas</h3>
-          <p>Base + páginas adicionales + extras. Si alguien envía su propio "total", se ignora.</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- CARACTERÍSTICAS: lista numerada + panel que cambia (en móvil, acordeón) -->
-    <section id="caracteristicas" class="seccion">
-      <div class="caracteristicas">
-        <div class="caracteristicas__lista">
-          <header class="seccion__cabecera revelar">
-            <span class="seccion__numero">[ 02 ] // características</span>
-            <h2>Características.</h2>
-          </header>
-
-          <ul class="lista-caracteristicas" id="lista-caracteristicas">
-            <li class="revelar"><button type="button" aria-expanded="true"><span class="lista-caracteristicas__num">1</span><span>Valida cada dato antes de calcular.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
-            <li class="revelar" style="--retraso: .07s"><button type="button" aria-expanded="false"><span class="lista-caracteristicas__num">2</span><span>El servidor tiene la última palabra.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
-            <li class="revelar" style="--retraso: .14s"><button type="button" aria-expanded="false"><span class="lista-caracteristicas__num">3</span><span>Las tarifas viven en un único archivo.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
-            <li class="revelar" style="--retraso: .21s"><button type="button" aria-expanded="false"><span class="lista-caracteristicas__num">4</span><span>Pruebas automáticas con un solo comando.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
-            <li class="revelar" style="--retraso: .28s"><button type="button" aria-expanded="false"><span class="lista-caracteristicas__num">5</span><span>Código separado por responsabilidades.</span></button><div class="lista-caracteristicas__movil"><div></div></div></li>
-          </ul>
-        </div>
-
-        <!-- Panel (escritorio). Cada .panel__item se copia también al acordeón del móvil -->
-        <div class="panel cristal borde-vivo revelar" id="panel-caracteristicas">
-          <div class="panel__item activo" aria-label="Validación">
-            <div class="ventana__barra"><i></i><i></i><i></i><span>POST /api/presupuesto · 400</span></div>
-            <pre class="codigo"><code><span class="c-gris">// petición con un valor fuera de rango</span>
-{ <span class="c-clave">"tipo"</span>: <span class="c-texto">"corporativa"</span>, <span class="c-clave">"paginas"</span>: <span class="c-num">0</span>, ... }
-
-<span class="c-gris">// respuesta · 400 Bad Request</span>
-{ <span class="c-clave">"error"</span>: <span class="c-texto">"Solicitud incorrecta"</span>,
-  <span class="c-clave">"detalles"</span>: [
-    <span class="c-texto">"\"paginas\" debe ser un número entero
-     entre 1 y 20 (recibido: 0)."</span>
-  ] }</code></pre>
-            <p class="panel__nota">Comprueba que estén los 4 campos, que <code>tipo</code> sea válido, que <code>paginas</code> sea un entero de 1 a 20 y que los extras sean <code>true</code> o <code>false</code>.</p>
-          </div>
-
-          <div class="panel__item" aria-label="El servidor decide">
-            <div class="ventana__barra"><i></i><i></i><i></i><span>POST /api/presupuesto · 200</span></div>
-            <pre class="codigo"><code><span class="c-gris">// el cliente intenta imponer su precio</span>
-{ <span class="c-clave">"tipo"</span>: <span class="c-texto">"corporativa"</span>, <span class="c-clave">"paginas"</span>: <span class="c-num">4</span>,
-  <span class="c-clave">"formulario"</span>: <span class="c-bool">true</span>, <span class="c-clave">"segundoIdioma"</span>: <span class="c-bool">false</span>,
-  <span class="c-tachado"><span class="c-clave">"total"</span>: <span class="c-num">1</span>, <span class="c-clave">"base"</span>: <span class="c-num">0</span></span> }
-
-<span class="c-gris">// se ignora: el total sale de sus tarifas</span>
-{ ..., <span class="c-clave">"total"</span>: <span class="c-num">830</span>, <span class="c-clave">"moneda"</span>: <span class="c-texto">"EUR"</span> }</code></pre>
-            <p class="panel__nota">Solo se usan los 4 campos permitidos. Cualquier otra propiedad que llegue se descarta.</p>
-          </div>
-
-          <div class="panel__item" aria-label="Tarifas">
-            <div class="ventana__barra"><i></i><i></i><i></i><span>src/tarifas.js</span></div>
-            <pre class="codigo"><code><span class="c-gris">// Es el ÚNICO sitio donde están los precios.</span>
-<span class="c-bool">const</span> TARIFAS = Object.freeze({
-  <span class="c-clave">landing</span>: <span class="c-num">300</span>,
-  <span class="c-clave">corporativa</span>: <span class="c-num">600</span>,
-  <span class="c-clave">paginaAdicional</span>: <span class="c-num">50</span>,
-  <span class="c-clave">formulario</span>: <span class="c-num">80</span>,
-  <span class="c-clave">segundoIdioma</span>: <span class="c-num">150</span>,
-  <span class="c-clave">moneda</span>: <span class="c-texto">"EUR"</span>
-});</code></pre>
-            <p class="panel__nota">Cambiar un precio es tocar una línea. La API, la calculadora y esta landing lo leen de aquí.</p>
-          </div>
-
-          <div class="panel__item" aria-label="Pruebas">
-            <div class="ventana__barra"><i></i><i></i><i></i><span>terminal</span></div>
-            <pre class="codigo codigo--terminal"><code><span class="c-gris">$</span> npm test
-<span class="c-ok">OK</span>  Caso 6 (paginas: 21) → 400
-<span class="c-ok">OK</span>  Caso 7 (paginas: 2.5) → 400
-<span class="c-ok">OK</span>  Caso 8 (tipo: "tienda") → 400
-<span class="c-ok">OK</span>  Caso 9 (formulario: "false") → 400
-<span class="c-ok">OK</span>  Caso 10 (Intenta imponer total: 1) → 200 · 830 €
-<span class="c-ok">OK</span>  Caso 11 (paginas: "4" (texto)) → 400
-
-<span class="c-ok">11/11 pruebas correctas</span></code></pre>
-            <p class="panel__nota">Comprueba las tres rutas y todos los casos de la tabla del README, válidos e inválidos.</p>
-          </div>
-
-          <div class="panel__item" aria-label="Arquitectura">
-            <div class="ventana__barra"><i></i><i></i><i></i><span>estructura</span></div>
-            <div class="flujo">
-              <span class="flujo__nodo flujo__nodo--borde">Petición JSON</span>
-              <span class="flujo__flecha">↓</span>
-              <span class="flujo__nodo"><b>server.js</b> rutas y puerto</span>
-              <span class="flujo__flecha">↓</span>
-              <span class="flujo__nodo"><b>validar.js</b> comprueba los datos</span>
-              <span class="flujo__flecha">↓</span>
-              <span class="flujo__fila">
-                <span class="flujo__nodo"><b>calcular.js</b> hace la suma</span>
-                <span class="flujo__flecha flujo__flecha--lado">←</span>
-                <span class="flujo__nodo"><b>tarifas.js</b> precios</span>
-              </span>
-              <span class="flujo__flecha">↓</span>
-              <span class="flujo__nodo flujo__nodo--borde">Respuesta JSON</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TARIFAS (se cargan desde GET /api/tarifas) -->
-    <section id="tarifas" class="seccion">
-      <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 03 ] // tarifas</span>
-        <h2>Tarifas</h2>
-        <p>Cargadas en directo desde <code>GET /api/tarifas</code>. Sin impuestos ni descuentos.</p>
-      </header>
-      <div class="rejilla rejilla--tarifas" id="lista-tarifas">
-        <div class="tarifa cristal esqueleto"></div>
-        <div class="tarifa cristal esqueleto"></div>
-        <div class="tarifa cristal esqueleto"></div>
-        <div class="tarifa cristal esqueleto"></div>
-        <div class="tarifa cristal esqueleto"></div>
-      </div>
-    </section>
-
-    <!-- ASISTENTE CON IA (POST /api/propuesta → /api/confirmar → /api/presupuesto/pdf) -->
-    <section id="asistente" class="seccion">
-      <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 04 ] // asistente ia</span>
-        <h2>Cuéntanos qué necesitas</h2>
-        <p>Describe tu proyecto con tus palabras. La IA te propone servicios de nuestro catálogo, tú los revisas y el servidor calcula el presupuesto en PDF.</p>
-      </header>
-      <!-- Pequeña app de React (ver asistente.js) -->
-      <div id="app-asistente" class="revelar">
-        <noscript><p class="mensaje-error cristal">El asistente necesita JavaScript activado.</p></noscript>
-      </div>
-    </section>
-
-    <!-- CALCULADORA (usa POST /api/presupuesto) -->
-    <section id="calculadora" class="seccion">
-      <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 05 ] // calculadora</span>
-        <h2>Calcula tu presupuesto</h2>
-        <p>Configura tu web y mira cómo quedaría. El total que ves es el que devuelve el servidor.</p>
-      </header>
-
-      <!-- La calculadora es una pequeña app de React (ver calculadora.js) -->
-      <div id="app-calculadora" class="revelar">
-        <noscript><p class="mensaje-error cristal">La calculadora necesita JavaScript activado.</p></noscript>
-      </div>
-    </section>
-
-    <!-- API -->
-    <section id="api" class="seccion">
-      <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 06 ] // api</span>
-        <h2>La API</h2>
-        <p>JSON de entrada, JSON de salida. Las rutas del asistente: <code>GET /api/catalogo</code>, <code>POST /api/propuesta</code>, <code>POST /api/confirmar</code> y <code>POST /api/presupuesto/pdf</code>.</p>
-      </header>
-      <div class="rutas">
-        <article class="ruta cristal revelar">
-          <span class="metodo metodo--get">GET</span>
-          <code>/api/estado</code>
-          <p>Comprueba que el servicio funciona.</p>
-          <span class="ruta__estado" id="ruta-estado">comprobando…</span>
-        </article>
-        <article class="ruta cristal revelar" style="--retraso: .08s">
-          <span class="metodo metodo--get">GET</span>
-          <code>/api/tarifas</code>
-          <p>Devuelve las tarifas que usa el servidor.</p>
-        </article>
-        <article class="ruta cristal revelar" style="--retraso: .16s">
-          <span class="metodo metodo--post">POST</span>
-          <code>/api/presupuesto</code>
-          <p>Recibe <code>tipo</code>, <code>paginas</code>, <code>formulario</code> y <code>segundoIdioma</code> y devuelve el desglose.</p>
-        </article>
-      </div>
-
-      <div class="terminal cristal ventana revelar">
-        <div class="ventana__barra"><i></i><i></i><i></i><span>terminal</span></div>
-        <pre class="codigo"><code><span class="c-gris">$</span> curl -X POST http://localhost:4000/api/presupuesto \
-    -H <span class="c-texto">"Content-Type: application/json"</span> \
-    -d <span class="c-texto">'{"tipo":"landing","paginas":2,"formulario":true,"segundoIdioma":true}'</span>
-
-{ <span class="c-clave">"base"</span>:<span class="c-num">300</span>, <span class="c-clave">"paginasAdicionales"</span>:<span class="c-num">50</span>, <span class="c-clave">"formulario"</span>:<span class="c-num">80</span>, <span class="c-clave">"segundoIdioma"</span>:<span class="c-num">150</span>, <span class="c-clave">"total"</span>:<span class="c-num">580</span>, <span class="c-clave">"moneda"</span>:<span class="c-texto">"EUR"</span> }</code></pre>
+      <div id="app-asistente">
+        <noscript><p class="aviso">El asistente necesita JavaScript activado.</p></noscript>
       </div>
     </section>
   </main>
 
   <footer class="pie">
     <p>Presupuesta mi web · Módulo 0613 · Desarrollo web en entorno servidor</p>
-    <a href="https://github.com/aldringcorcho/presupuesta-mi-web" target="_blank" rel="noopener">Código en GitHub ↗</a>
+    <a href="https://github.com/aldringcorcho/presupuesta-mi-web" target="_blank" rel="noopener">GitHub ↗</a>
   </footer>
 
   <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
-  <script src="app.js"></script>
-  <!-- React 18 + htm (JSX sin compilar) para la calculadora -->
+  <script src="fondo.js"></script>
+  <!-- React 18 + htm (JSX sin compilar) -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
-  <script type="module" src="calculadora.js"></script>
   <script type="module" src="asistente.js"></script>
 </body>
 </html>

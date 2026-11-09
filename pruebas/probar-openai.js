@@ -12,6 +12,22 @@ const CASOS = [
   },
   { nombre: "Ambigua", cliente: "Negocio Ficticio", descripcion: "Quiero una web para mi negocio, algo moderno." },
   {
+    nombre: "Ambigua · segunda ronda",
+    cliente: "Negocio Ficticio",
+    descripcion: "Quiero una web para mi negocio, algo moderno.",
+    respuestas: [
+      { pregunta: "¿Una sola página o varias secciones?", respuesta: "Varias secciones" },
+      { pregunta: "¿Cuántas páginas en total?", respuesta: "4 páginas" },
+      { pregunta: "¿Necesitas formulario de contacto?", respuesta: "Sí" }
+    ]
+  },
+  {
+    nombre: "Clara · tono formal",
+    tono: "formal",
+    cliente: "Asesoría Ficticia S.L.",
+    descripcion: "Somos una asesoría fiscal. Queremos una web con inicio, servicios, equipo y contacto, con formulario para solicitar consulta."
+  },
+  {
     nombre: "Fuera de catálogo",
     cliente: "Moda Ficticia",
     descripcion: "Quiero una tienda online para vender ropa, con pago con tarjeta y área de clientes. ¿Cuánto cuesta y cuándo estaría?"
@@ -51,12 +67,15 @@ const CASOS = [
     console.log(`===== ${c.nombre}: «${c.descripcion}»`);
     try {
       const t0 = Date.now();
-      const p = validarRespuestaIA(await pedirPropuesta(c));
+      const p = validarRespuestaIA(await pedirPropuesta({ tono: "cercano", respuestas: [], ...c }));
       console.log(`(${((Date.now() - t0) / 1000).toFixed(1)} s)`);
       console.log("Resumen:", p.resumen);
       for (const s of p.servicios) console.log(`  + ${s.id}: ${s.justificacion}`);
       console.log("  Páginas:", p.paginas);
-      for (const x of p.pendientes) console.log(`  ? [${x.tipo}] ${x.texto}`);
+      for (const x of p.pendientes) {
+        console.log(`  ? [${x.tipo}] ${x.texto}${x.motivo ? `  (${x.motivo})` : ""}`);
+        for (const o of x.opciones) console.log(`      · ${o.texto} → ${o.accion}${o.paginas ? " " + o.paginas : ""}`);
+      }
       for (const a of p.avisos) console.log(`  ! ${a}`);
     } catch (err) {
       fallos++;

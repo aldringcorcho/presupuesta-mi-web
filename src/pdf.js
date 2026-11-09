@@ -23,7 +23,13 @@ pdfmake.addFonts({
 pdfmake.setUrlAccessPolicy(() => false);
 pdfmake.setLocalAccessPolicy(() => false);
 
-const COLOR = { acento: "#3d6bff", oscuro: "#0b0d1f", tenue: "#5b6178", linea: "#d9ddeb", fondo: "#f3f5fc" };
+// Misma paleta que la web: blanco y negro
+const COLOR = { acento: "#111111", oscuro: "#111111", tenue: "#6b6b6b", linea: "#dcdcdc", fondo: "#f2f2f2" };
+
+/** La fuente Roboto incluida no tiene algunos símbolos (como la flecha →): se sustituyen por otros que sí tiene. */
+function textoParaFuente(texto) {
+  return texto.replace(/[→⇒➜➔]/g, "»");
+}
 
 function fechaLarga(iso) {
   return new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
@@ -106,7 +112,7 @@ function definicionDocumento(p) {
 
       { text: "Aclaraciones y aspectos pendientes de concretar", style: "h2" },
       p.pendientes.length
-        ? { ul: p.pendientes, color: COLOR.oscuro }
+        ? { ul: p.pendientes.map(textoParaFuente), color: COLOR.oscuro }
         : { text: "No hay aspectos pendientes.", color: COLOR.tenue }
     ]
   };
