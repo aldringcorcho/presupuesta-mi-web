@@ -1,18 +1,20 @@
 {
   "name": "presupuesta-mi-web",
   "version": "1.0.0",
-  "description": "API REST que calcula presupuestos de proyectos web (0613 · DWES)",
+  "description": "Presupuestos de proyectos web con asistente de IA (OpenAI) y PDF (0613 · DWES)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "test": "node pruebas/pruebas.js"
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --watch --env-file-if-exists=.env server.js",
+    "test": "node pruebas/pruebas.js && node --test pruebas/asistente.test.js",
+    "probar:openai": "node --env-file-if-exists=.env pruebas/probar-openai.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.9"
   },
   "license": "ISC",
   "dependencies": {
-    "express": "^5.3.0"
+    "express": "^5.3.0",
+    "pdfmake": "^0.3.12"
   }
 }

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Presupuesta mi web</title>
-  <meta name="description" content="Calcula al momento el presupuesto de tu web: landing o corporativa, páginas, formulario e idiomas.">
+  <meta name="description" content="Describe tu proyecto y recibe una propuesta de servicios y un presupuesto en PDF, calculado por el servidor.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -42,10 +42,11 @@
       <a href="#como">Cómo funciona</a>
       <a href="#caracteristicas">Características</a>
       <a href="#tarifas">Tarifas</a>
+      <a href="#asistente">Asistente IA</a>
       <a href="#calculadora">Calculadora</a>
       <a href="#api">API</a>
     </nav>
-    <a href="#calculadora" class="boton boton--pequeno">Calcular</a>
+    <a href="#asistente" class="boton boton--pequeno">Pedir propuesta</a>
   </header>
 
   <main>
@@ -56,12 +57,13 @@
         <h1>Tu web, con un <span class="degradado" id="titular-efecto">precio claro</span> en segundos.</h1>
         <p class="hero__sub">Elige el tipo de web, cuántas páginas necesitas y los extras. El servidor valida los datos y calcula el presupuesto con sus propias tarifas: nada de precios inventados desde el navegador.</p>
         <div class="hero__acciones">
-          <a href="#calculadora" class="boton cristal cristal--liquido borde-vivo">Calcular mi presupuesto →</a>
+          <a href="#asistente" class="boton cristal cristal--liquido borde-vivo">Cuéntanos tu proyecto →</a>
+          <a href="#calculadora" class="boton boton--fantasma">Calculadora</a>
           <a href="#api" class="boton boton--fantasma">Ver la API</a>
         </div>
         <dl class="hero__datos">
-          <div><dt>3</dt><dd>rutas REST</dd></div>
-          <div><dt>11/11</dt><dd>pruebas OK</dd></div>
+          <div><dt>7</dt><dd>rutas REST</dd></div>
+          <div><dt>26/26</dt><dd>pruebas OK</dd></div>
           <div><dt>0</dt><dd>precios en el navegador</dd></div>
         </dl>
       </div>
@@ -222,10 +224,23 @@
       </div>
     </section>
 
+    <!-- ASISTENTE CON IA (POST /api/propuesta → /api/confirmar → /api/presupuesto/pdf) -->
+    <section id="asistente" class="seccion">
+      <header class="seccion__cabecera revelar">
+        <span class="seccion__numero">[ 04 ] // asistente ia</span>
+        <h2>Cuéntanos qué necesitas</h2>
+        <p>Describe tu proyecto con tus palabras. La IA te propone servicios de nuestro catálogo, tú los revisas y el servidor calcula el presupuesto en PDF.</p>
+      </header>
+      <!-- Pequeña app de React (ver asistente.js) -->
+      <div id="app-asistente" class="revelar">
+        <noscript><p class="mensaje-error cristal">El asistente necesita JavaScript activado.</p></noscript>
+      </div>
+    </section>
+
     <!-- CALCULADORA (usa POST /api/presupuesto) -->
     <section id="calculadora" class="seccion">
       <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 04 ] // calculadora</span>
+        <span class="seccion__numero">[ 05 ] // calculadora</span>
         <h2>Calcula tu presupuesto</h2>
         <p>Configura tu web y mira cómo quedaría. El total que ves es el que devuelve el servidor.</p>
       </header>
@@ -239,9 +254,9 @@
     <!-- API -->
     <section id="api" class="seccion">
       <header class="seccion__cabecera revelar">
-        <span class="seccion__numero">[ 05 ] // api</span>
+        <span class="seccion__numero">[ 06 ] // api</span>
         <h2>La API</h2>
-        <p>Tres rutas. JSON de entrada, JSON de salida.</p>
+        <p>JSON de entrada, JSON de salida. Las rutas del asistente: <code>GET /api/catalogo</code>, <code>POST /api/propuesta</code>, <code>POST /api/confirmar</code> y <code>POST /api/presupuesto/pdf</code>.</p>
       </header>
       <div class="rutas">
         <article class="ruta cristal revelar">
@@ -285,5 +300,6 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
   <script type="module" src="calculadora.js"></script>
+  <script type="module" src="asistente.js"></script>
 </body>
 </html>

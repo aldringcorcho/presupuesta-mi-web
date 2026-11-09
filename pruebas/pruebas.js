@@ -1,6 +1,7 @@
-// Lanza todas las pruebas contra el servidor encendido.
-// Uso: enciende el servidor (npm run dev) y en OTRA terminal: npm test
-const BASE = "http://localhost:4000";
+// Pruebas de la calculadora (POST /api/presupuesto).
+// Arranca la app en un puerto libre, lanza los casos y la apaga. Uso: npm test
+const app = require("../server");
+let BASE;
 
 // Un caso correcto que usamos como plantilla
 const valido = { tipo: "corporativa", paginas: 4, formulario: true, segundoIdioma: false };
@@ -21,6 +22,10 @@ const casos = [
 ];
 
 (async () => {
+  const servidor = await new Promise((ok) => {
+    const s = app.listen(0, () => ok(s));
+  });
+  BASE = `http://localhost:${servidor.address().port}`;
   let fallos = 0;
 
   // Probar las dos rutas GET
@@ -45,5 +50,7 @@ const casos = [
   }
 
   console.log(`\n${casos.length - fallos}/${casos.length} pruebas correctas`);
+  servidor.close();
+  servidor.close();
   process.exit(fallos ? 1 : 0);
 })();
